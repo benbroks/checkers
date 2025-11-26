@@ -1,4 +1,4 @@
-from checkers.api.environment import hash_state, reset, legal_moves, step
+from checkers.api.environment import reset, legal_moves, step
 from checkers.ai.uct_mcts import load_mcts_data, single_turn_mcts_player
 import random
 
