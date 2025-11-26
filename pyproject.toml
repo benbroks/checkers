@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+python_files = "test_*.py"
+addopts = "-v"
+
+[project]
+name = "python-checkers"
+version = "1.0.0"
+description = "A checkers game implementation with AI support"
+requires-python = ">=3.7"

@@ -1,4 +1,4 @@
-from utils import get_position_with_row_col
+from checkers.core.utils import get_position_with_row_col
 
 class Piece:
     def __init__(self, name):

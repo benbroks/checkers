@@ -1,13 +1,17 @@
-from utils import get_piece_gui_coords, get_piece_position
+from checkers.core.utils import get_piece_gui_coords, get_piece_position
 import pygame
+from pathlib import Path
+
+# Get assets directory using Path relative to this file
+_ASSETS_DIR = Path(__file__).parent / "assets"
 
 # Preload images
-BLACK_PIECE_SURFACE = pygame.image.load("images/black_piece.png")
-WHITE_PIECE_SURFACE = pygame.image.load("images/white_piece.png")
-BLACK_KING_PIECE_SURFACE = pygame.image.load("images/black_king_piece.png")
-WHITE_KING_PIECE_SURFACE = pygame.image.load("images/white_king_piece.png")
-MOVE_MARK = pygame.image.load("images/marking.png")
-BOARD = pygame.image.load("images/board.png")
+BLACK_PIECE_SURFACE = pygame.image.load(str(_ASSETS_DIR / "black_piece.png"))
+WHITE_PIECE_SURFACE = pygame.image.load(str(_ASSETS_DIR / "white_piece.png"))
+BLACK_KING_PIECE_SURFACE = pygame.image.load(str(_ASSETS_DIR / "black_king_piece.png"))
+WHITE_KING_PIECE_SURFACE = pygame.image.load(str(_ASSETS_DIR / "white_king_piece.png"))
+MOVE_MARK = pygame.image.load(str(_ASSETS_DIR / "marking.png"))
+BOARD = pygame.image.load(str(_ASSETS_DIR / "board.png"))
 
 # GUI specifications
 BOARD_POSITION = (26, 26)

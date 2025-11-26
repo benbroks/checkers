@@ -1,9 +1,9 @@
-from piece import Piece
-from board import Board
-from board_gui import BoardGUI
-from held_piece import HeldPiece
-from ai import AI
-from utils import get_surface_mouse_offset, get_piece_position
+from checkers.core.piece import Piece
+from checkers.core.board import Board
+from checkers.gui.board_gui import BoardGUI
+from checkers.gui.held_piece import HeldPiece
+from checkers.ai.minimax import AI
+from checkers.core.utils import get_surface_mouse_offset, get_piece_position
 
 class GameControl:
     def __init__(self, player_color, is_computer_opponent):

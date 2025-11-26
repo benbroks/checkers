@@ -1,4 +1,4 @@
-from utils import get_position_with_row_col
+from checkers.core.utils import get_position_with_row_col
 
 class Board:
     def __init__(self, pieces, color_up):
@@ -9,7 +9,7 @@ class Board:
 
     def reset(self):
         """Reset the board to initial game state with all pieces in starting positions."""
-        from piece import Piece
+        from checkers.core.piece import Piece
 
         pieces = []
 

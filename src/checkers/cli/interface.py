@@ -4,9 +4,9 @@ CLI version of checkers game for RL environment development.
 Uses coordinate notation (e.g., 'a3 b4') for moves.
 """
 
-from board import Board
-from piece import Piece
-from utils import get_position_with_row_col
+from checkers.core.board import Board
+from checkers.core.piece import Piece
+from checkers.core.utils import get_position_with_row_col
 
 
 def create_initial_pieces():

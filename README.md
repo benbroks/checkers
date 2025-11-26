@@ -13,9 +13,27 @@ This was made using Python and the pygame module with the goal of studying OOP.
 3. Activate the virtual environment:
    - On macOS/Linux: `source venv/bin/activate`
    - On Windows: `venv\Scripts\activate`
-4. Install dependencies: `pip install -r requirements.txt`
-5. Run `python checkers.py <gamemode>` to run the game. Gamemode can be either "cpu" or "pvp" for singleplayer or local multiplayer.
-6. Optionally run `pytest` on the tests folder to run unit tests.
+4. Install the package and dependencies: `pip install -e .`
+5. Run the GUI game: `python -m test.play_gui <gamemode>` (gamemode can be "cpu" or "pvp")
+   - Or run the CLI version: `python -m checkers.cli.interface`
+6. Run tests: `pytest test/`
+
+## Project Structure
+
+```
+python-checkers/
+├── src/checkers/          # Main package
+│   ├── core/              # Core game logic (Board, Piece, utils)
+│   ├── ai/                # AI implementations (minimax, MCTS)
+│   ├── gui/               # Pygame GUI components
+│   ├── cli/               # Command-line interface
+│   └── api/               # Stateless API for ML/RL
+├── test/                  # Tests and example scripts
+│   ├── test_*.py          # Unit tests
+│   ├── play_gui.py        # GUI example
+│   └── play_mcts.py       # MCTS example
+└── docs/                  # Documentation
+```
 
 
 ## Example
@@ -34,7 +52,7 @@ A new **stateless, functional API** is available for integrating checkers with M
 
 **Quick example:**
 ```python
-from checkers_env import reset, legal_moves, step, current_player
+from checkers.api.environment import reset, legal_moves, step, current_player
 
 # Start game
 state = reset()

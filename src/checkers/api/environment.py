@@ -20,8 +20,8 @@ Player representation:
 - -1 represents Black (B)
 """
 
-from board import Board
-from piece import Piece
+from checkers.core.board import Board
+from checkers.core.piece import Piece
 import copy
 
 

@@ -1,5 +1,5 @@
-from checkers_env import hash_state, reset, legal_moves, step
-from uct_mcts import load_mcts_data, single_turn_mcts_player
+from checkers.api.environment import hash_state, reset, legal_moves, step
+from checkers.ai.uct_mcts import load_mcts_data, single_turn_mcts_player
 import random
 
 
@@ -33,6 +33,7 @@ def uct_mcts_vs_random(
             state = next_state
     print("shouldn't hit this")
     return 0
+
 
 def main():
     N_s, N_s_a, R_s_a = load_mcts_data()

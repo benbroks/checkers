@@ -1,8 +1,8 @@
 import pygame as pg
 from sys import exit, argv
 from pygame.locals import *
-from board_gui import BoardGUI
-from game_control import GameControl
+from checkers.gui.board_gui import BoardGUI
+from checkers.gui.game_control import GameControl
 
 def main(gamemode):
     # Main setup

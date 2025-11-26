@@ -1,8 +1,6 @@
-import sys
-sys.path.append('..')
-from piece import Piece
-from board import Board
-from ai import AI
+from checkers.core.piece import Piece
+from checkers.core.board import Board
+from checkers.ai.minimax import AI
 
 def test_minimax_maximize():
     # minimax() returns the maximum value possible

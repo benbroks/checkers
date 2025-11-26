@@ -1,7 +1,5 @@
-import sys
-sys.path.append('..')
-from piece import Piece
-from board import Board
+from checkers.core.piece import Piece
+from checkers.core.board import Board
 
 def test_piece_getters():
     test_piece = Piece('16WN')

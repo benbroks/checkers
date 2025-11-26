@@ -1,4 +1,4 @@
-from board import Board
+from checkers.core.board import Board
 from copy import deepcopy
 from random import choice
 

@@ -1,5 +1,5 @@
 from typing import Any
-from checkers_env import hash_state, reset, legal_moves, step
+from checkers.api.environment import hash_state, reset, legal_moves, step
 import random
 import math
 import json

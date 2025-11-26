@@ -1,7 +1,5 @@
-import sys
-sys.path.append('..')
-from board import Board
-from piece import Piece
+from checkers.core.board import Board
+from checkers.core.piece import Piece
 
 def test_has_piece():
     # Simple test to assert has_piece detects a piece on a given position.
