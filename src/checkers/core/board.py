@@ -57,10 +57,12 @@ class Board:
         # There are four dark squares on each row where pieces can be placed.
         # The remainder of (position / 4) can be used to determine which of the four squares has the position.
         # We also take into account that odd rows on the board have a offset of 1 column.
+        current_row = self.get_row_number(position)
         remainder = position % 4
-        column_position = remainder * 2 # because the squares have a gap of one light square.
-        is_row_odd = not (self.get_row_number(position) % 2 == 0)
-        return column_position + 1 if is_row_odd else column_position
+        if current_row % 2 == 0:
+            return remainder * 2 + 1
+        else:
+            return remainder * 2
     
     def get_row(self, row_number):
         # Receives a row number, returns a set with all pieces contained in it.
@@ -138,7 +140,9 @@ class Board:
 
         # Delete piece from the board if this move eats another piece
         if is_eat_movement(int(piece_to_move.get_position())):
-            self.pieces.pop(get_eaten_index(int(piece_to_move.get_position()))) 
+
+            get_eaten = get_eaten_index(int(piece_to_move.get_position()))
+            self.pieces.pop(get_eaten)
             piece_to_move.set_has_eaten(True)
         else:
             piece_to_move.set_has_eaten(False)

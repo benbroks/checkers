@@ -29,9 +29,9 @@ def position_to_coords(position):
     row = position // 4
     # Determine if this row starts with even or odd column
     if row % 2 == 0:
-        col = (position % 4) * 2
-    else:
         col = (position % 4) * 2 + 1
+    else:
+        col = (position % 4) * 2
     return row, col
 
 
@@ -258,4 +258,6 @@ def main():
 
 
 if __name__ == "__main__":
+    # for i in range(32):
+    #     print(i, position_to_coords(i))
     main()

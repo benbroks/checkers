@@ -111,7 +111,7 @@ def step(state, action):
                             +1.0 if they won, 0.0 otherwise
             - done (bool): Whether the game has terminated
             - info (dict): Additional information including:
-                - "winner": +1, -1, or None
+                - "winner": B, W, or None
                 - "captured": bool indicating if a piece was captured
                 - "was_kinged": bool indicating if a piece became a king
                 - "illegal_move": bool (only present if move was illegal)
@@ -130,7 +130,7 @@ def step(state, action):
         raise ValueError(f"Illegal move: {action}. Legal moves: {legal}")
 
     # Track the player who is making this move
-    prev_player = _color_to_player(board.get_current_turn())
+    prev_player = board.get_current_turn()
 
     # Find the piece index for the from_position
     piece_index = None

@@ -137,14 +137,35 @@ def action_score(
     )
     return q_val + EXPLORATION_CONSTANT * exploration_factor
 
+def num_visits(
+    state,
+    action,
+    N_s_a
+) -> int:
+    hashed_state = hash_state(state)
+    tuple_key = (hashed_state, str(action))
+    if tuple_key in N_s_a:
+        return N_s_a[tuple_key]
+    else:
+        return 0
 
-def update_mcts_maps(path, reward, winner) -> tuple[
+
+
+def update_mcts_maps(
+    N_s,
+    N_s_a,
+    R_s_a,
+    path,
+    reward,
+    winner
+) -> tuple[
     dict[str, int],
     dict[tuple[str, str], int],
     dict[tuple[str, str], int]
 ]:
     for sample_state, sample_action in path:
         hashed_sample_state = hash_state(sample_state)
+
         if hashed_sample_state not in N_s:
             N_s[hashed_sample_state] = 1
         else:
@@ -156,12 +177,18 @@ def update_mcts_maps(path, reward, winner) -> tuple[
             N_s_a[(hashed_sample_state, str(sample_action))] += 1
 
         current_player = sample_state['current_turn']
-        if (hashed_sample_state, sample_action) not in R_s_a:
+        if (hashed_sample_state, str(sample_action)) not in R_s_a:
             R_s_a[(hashed_sample_state, str(sample_action))] = 0
 
         # Note that a tie & loss are considered to have 0 reward here
         if reward != 0 and current_player == winner:
             R_s_a[(hashed_sample_state, str(sample_action))] += 1
+        
+        # if R_s_a[(hashed_sample_state, str(sample_action))] == 1:
+        #     print(hashed_sample_state, str(sample_action))
+        #     print(f"N_s: {N_s[hashed_sample_state]}")
+        #     print(f"N_s_a: {N_s_a[(hashed_sample_state, str(sample_action))]}")
+        #     print(f"R_s_a: {R_s_a[(hashed_sample_state, str(sample_action))]}")
     return N_s, N_s_a, R_s_a
 
 
@@ -185,42 +212,51 @@ def mcts_exploit(
             best_action = m
     return best_action
 
+def mcts_most_traveled(
+    state,
+    N_s_a
+) -> Any | None:
+    possible_moves = legal_moves(state)
+    best_action, best_score = None, -1
+    for m in possible_moves:
+        candidate_score = num_visits(
+            state,
+            m,
+            N_s_a
+        )
+        if candidate_score > best_score:
+            best_action = m
+    return best_action
+
 
 def single_turn_mcts_player(
     N_s,
     N_s_a,
-    R_s_a,
     state
 ):
+    """
+    To be used for pure-exploit testing. Not for "training".
+    """
     hashed_state = hash_state(state)
     possible_moves = legal_moves(state)
     have_taken_actions = [
         (hashed_state, str(move)) in N_s_a
         for move in possible_moves
     ]
-    taken_all_actions = all(have_taken_actions)
-    if hashed_state in N_s and taken_all_actions:
-        print("EXPLOIT TIME")
-        best_action = mcts_exploit(
+    taken_one_action = any(have_taken_actions)
+    if hashed_state in N_s and taken_one_action:
+        best_action = mcts_most_traveled(
             state,
-            N_s,
-            N_s_a,
-            R_s_a
+            N_s_a
         )
         next_state, reward, done, info = step(state, best_action)
     else:
-        print("EXPLORE TIME")
-        unexplored_actions = [
-            a for have_taken, a
-            in zip(have_taken_actions, possible_moves)
-            if not have_taken
-        ]
-        action_to_take = random.choice(unexplored_actions)
+        action_to_take = random.choice(possible_moves)
         next_state, reward, done, info = step(state, action_to_take)
     return next_state, reward, done, info
 
 
-def simulation(
+def double_mcts_simulation(
     N_s,
     N_s_a,
     R_s_a
@@ -232,17 +268,20 @@ def simulation(
     state = reset()
     path = []
     finished_sim = False
+    num_turns = 0
     while not finished_sim:
+        num_turns += 1
         hashed_state = hash_state(state)
         possible_moves = legal_moves(state)
+        if num_turns > 500:
+            print(state)
+            print(possible_moves)
         have_taken_actions = [
             (hashed_state, str(move)) in N_s_a
             for move in possible_moves
         ]
         taken_all_actions = all(have_taken_actions)
         if hashed_state in N_s and taken_all_actions:
-            print("exploit")
-            print(hashed_state)
             best_action = mcts_exploit(
                 state,
                 N_s,
@@ -256,7 +295,6 @@ def simulation(
                 finished_sim = True
                 winner = info['winner']
         else:
-            print("explore")
             unexplored_actions = [
                 a for have_taken, a
                 in zip(have_taken_actions, possible_moves)
@@ -270,27 +308,108 @@ def simulation(
             path = path + random_path
             finished_sim = True
 
-    return update_mcts_maps(path, reward, winner)
+    return update_mcts_maps(N_s, N_s_a, R_s_a, path, reward, winner)
 
 
-if __name__ == "__main__":
+def one_way_mcts_simulation(
+    N_s,
+    N_s_a,
+    R_s_a,
+    mcts_player
+) -> tuple[
+    dict[str, int],
+    dict[tuple[str, str], int],
+    dict[tuple[str, str], int]
+]:
+    state = reset()
+    path = []
+    finished_sim = False
+
+    while not finished_sim:
+        current_player = state['current_turn']
+        if current_player == mcts_player:
+            hashed_state = hash_state(state)
+            possible_moves = legal_moves(state)
+            have_taken_actions = [
+                (hashed_state, str(move)) in N_s_a
+                for move in possible_moves
+            ]
+            taken_all_actions = all(have_taken_actions)
+            if hashed_state in N_s and taken_all_actions:
+                best_action = mcts_exploit(
+                    state,
+                    N_s,
+                    N_s_a,
+                    R_s_a
+                )
+                path.append((state, best_action))
+                next_state, reward, done, info = step(state, best_action)
+                state = next_state
+                if done:
+                    finished_sim = True
+                    winner = info['winner']
+            else:
+                # COMPLETELY RANDOM (over unexplored actions)
+                unexplored_actions = [
+                    a for have_taken, a
+                    in zip(have_taken_actions, possible_moves)
+                    if not have_taken
+                ]
+                chosen_action = random.choice(unexplored_actions)
+                path.append((state, chosen_action))
+                next_state, reward, done, info = step(state, chosen_action)
+                state = next_state
+                if done:
+                    finished_sim = True
+                    winner = info['winner']
+        else:
+            # COMPLETELY RANDOM
+            chosen_action = random.choice(legal_moves(state))
+            next_state, reward, done, info = step(state, chosen_action)
+            state = next_state
+            if done:
+                finished_sim = True
+                winner = info['winner']
+
+    return update_mcts_maps(N_s, N_s_a, R_s_a, path, reward, winner)
+
+
+def main():
     # Run training when script is executed directly
+    import time
+    random.seed(time.time() % 10000)
+    INJECT_RANDOMNESS = False
     N_s, N_s_a, R_s_a = load_mcts_data("mcts_data.json")
-    num_sims = 5
+    num_sims = 500
     for i in range(num_sims):
-        simulation(
-            N_s,
-            N_s_a,
-            R_s_a
-        )
-        print(f"Iteration {i+1}/{num_sims}:")
-        print(f"  R_s_a: {len(R_s_a)}")
-        print(f"  N_s_a: {len(N_s_a)}")
-        print(f"  N_s: {len(N_s)}")
+        # RANDOM
+        if INJECT_RANDOMNESS:
+            if i % 2 == 0:
+                one_way_mcts_simulation(
+                    N_s,
+                    N_s_a,
+                    R_s_a,
+                    mcts_player="W"
+                )
+            else:
+                one_way_mcts_simulation(
+                    N_s,
+                    N_s_a,
+                    R_s_a,
+                    mcts_player="B"
+                )
+        else:
+            double_mcts_simulation(
+                N_s,
+                N_s_a,
+                R_s_a
+            )
 
-        # # Save checkpoints every 100 iterations
-        # if (i + 1) % 100 == 0:
-        #     save_mcts_data(f"mcts_checkpoint_{i+1}.json")
+        if (i + 1) % 50 == 0:
+            print(f"Iteration {i+1}/{num_sims}:")
+            print(f"  R_s_a: {len(R_s_a)}")
+            print(f"  N_s_a: {len(N_s_a)}")
+            print(f"  N_s: {len(N_s)}")
 
     # Save final model
     save_mcts_data(
@@ -300,3 +419,8 @@ if __name__ == "__main__":
         "mcts_data.json"
     )
     print("\n✓ Training complete!")
+
+
+
+if __name__ == "__main__":
+    main()

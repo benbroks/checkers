@@ -5,6 +5,9 @@ class Piece:
         # Example: <position><color><isKing?> 16WN
         self.name = name
         self.has_eaten = False # True if the piece instance has eaten a piece in its last move
+
+    def __str__(self):
+        return self.name
     
     def get_name(self):
         return self.name
