@@ -9,7 +9,8 @@ The state representation follows the format:
 {
     "pieces": [{"name": "12WN", "has_eaten": false}, ...],
     "current_turn": "W" or "B",
-    "color_up": "W" or "B"
+    "color_up": "W" or "B",
+    "visit_counts": {<position_hash>: count, ...}  # Tracks state repetitions for draw detection
 }
 
 Actions are represented as tuples: (from_position, to_position)
@@ -22,11 +23,24 @@ Player representation:
 
 from checkers.core.board import Board
 from checkers.core.piece import Piece
+from checkers.core.state_utils import create_position_hash, create_state_hash
 import copy
 
 
-def _board_to_state(board):
-    """Convert a Board object to a JSON-serializable state dict."""
+def _board_to_state(board, visit_counts=None):
+    """Convert a Board object to a JSON-serializable state dict.
+
+    Args:
+        board: Board object to convert
+        visit_counts: Optional visit_counts to use. If not provided, extracts from board object.
+
+    Returns:
+        State dict with pieces, current_turn, color_up, and visit_counts
+    """
+    # If visit_counts not explicitly provided, get from board
+    if visit_counts is None:
+        visit_counts = board.get_visit_counts()
+
     return {
         "pieces": [
             {
@@ -36,7 +50,8 @@ def _board_to_state(board):
             for piece in board.get_pieces()
         ],
         "current_turn": board.get_current_turn(),
-        "color_up": board.get_color_up()
+        "color_up": board.get_color_up(),
+        "visit_counts": visit_counts
     }
 
 
@@ -48,7 +63,11 @@ def _state_to_board(state):
         piece.set_has_eaten(piece_data["has_eaten"])
         pieces.append(piece)
 
-    board = Board(pieces, state["color_up"])
+    board = Board(
+        pieces,
+        state["color_up"],
+        visit_counts=state.get("visit_counts", {})
+    )
     board.set_current_turn(state["current_turn"])
     return board
 
@@ -71,8 +90,14 @@ def reset():
         dict: Initial game state with all pieces in starting positions.
     """
     board = Board([], "W")  # Empty pieces, white moves up
-    board.reset()
-    return _board_to_state(board)
+    board.reset()  # This sets board.visit_counts = {}
+
+    # Create state and record initial position
+    state = _board_to_state(board)  # Now extracts visit_counts from board
+    position_hash = _position_hash(state)
+    state["visit_counts"][position_hash] = 1
+
+    return state
 
 
 def legal_moves(state):
@@ -108,12 +133,13 @@ def step(state, action):
         tuple: (next_state, reward, done, info) where:
             - next_state (dict): The resulting game state
             - reward (float): Reward from the perspective of the player who just moved
-                            +1.0 if they won, 0.0 otherwise
+                            +1.0 if they won, 0.0 for draw or ongoing game
             - done (bool): Whether the game has terminated
             - info (dict): Additional information including:
-                - "winner": B, W, or None
+                - "winner": B, W, or None (None indicates a draw)
                 - "captured": bool indicating if a piece was captured
                 - "was_kinged": bool indicating if a piece became a king
+                - "threefold_repetition": bool indicating if game ended by 3-fold repetition
                 - "illegal_move": bool (only present if move was illegal)
 
     Raises:
@@ -164,28 +190,43 @@ def step(state, action):
             break
     was_kinged = piece_after is not None and not was_king_before and piece_after.is_king()
 
-    # 5. Check for terminal condition
+    # 5. Get current visit count
+    # Note: move_piece() already updated visit_counts for the new position
+    position_hash = create_position_hash(board)
+    current_visit_count = board.get_visit_counts().get(position_hash, 0)
+
+    # 6. Check for terminal conditions
     # Note: current_turn has already been switched by move_piece (if appropriate)
     legal_next = board.legal_moves()
-    done = len(legal_next) == 0
+    no_legal_moves = len(legal_next) == 0
 
-    # 6. Compute reward
+    # Check for 3-fold repetition (draw)
+    threefold_repetition = current_visit_count >= 3
+
+    done = no_legal_moves or threefold_repetition
+
+    # 7. Compute reward
     if not done:
         reward = 0.0
         winner = None
+    elif threefold_repetition:
+        # Draw by 3-fold repetition - no winner
+        winner = None
+        reward = 0.0
     else:
         # The player who just moved has won (opponent has no legal moves)
         winner = prev_player
         reward = 1.0  # Reward from perspective of the player who just moved
 
-    # 7. Encode next state
-    next_state = _board_to_state(board)
+    # 8. Encode next state
+    next_state = _board_to_state(board)  # Extracts visit_counts from board
 
-    # 8. Build info dict
+    # 9. Build info dict
     info = {
         "winner": winner,
         "captured": captured,
         "was_kinged": was_kinged,
+        "threefold_repetition": threefold_repetition,
     }
 
     return next_state, reward, done, info
@@ -223,13 +264,31 @@ def get_winner(state):
     return _color_to_player(winner_color)
 
 
+def _position_hash(state):
+    """
+    Create a hash of the board position WITHOUT visit counts.
+
+    This is used internally to track position repetitions.
+
+    Args:
+        state (dict): Current game state
+
+    Returns:
+        str: A canonical hash of the board position only
+    """
+    # Convert state to board and use shared utility
+    board = _state_to_board(state)
+    return create_position_hash(board)
+
+
 def hash_state(state):
     """
     Create a hashable representation of a game state.
 
     This function creates a canonical hash of the state that can be used as a
     dictionary key. The hash is stable across equivalent states regardless of
-    piece ordering in the pieces list.
+    piece ordering in the pieces list. Includes visit counts for tracking
+    position repetitions.
 
     Args:
         state (dict): Current game state
@@ -246,18 +305,9 @@ def hash_state(state):
         >>> # Can be used as dict key
         >>> visited = {hash_state(state): True}
     """
-    # Sort pieces by name to ensure consistent ordering
-    # Name format is: <position><color><king> (e.g., "12WN", "5BY")
-    sorted_pieces = sorted(state["pieces"], key=lambda p: p["name"])
-
-    # Create canonical string representation
-    pieces_str = ",".join(
-        f"{p['name']}:{int(p['has_eaten'])}"
-        for p in sorted_pieces
-    )
-
-    # Combine all state components
-    return f"{pieces_str}|{state['current_turn']}|{state['color_up']}"
+    # Convert state to board and use shared utility
+    board = _state_to_board(state)
+    return create_state_hash(board)
 
 
 def render_state(state):

@@ -1,11 +1,12 @@
 from checkers.core.utils import get_position_with_row_col
 
 class Board:
-    def __init__(self, pieces, color_up):
+    def __init__(self, pieces, color_up, visit_counts=None):
         # Example: [Piece('12WND'), Piece('14BNU'), Piece('24WYD')]
         self.pieces = pieces
         self.color_up = color_up # Defines which of the colors is moving up.
         self.current_turn = "W" # White always starts
+        self.visit_counts = visit_counts if visit_counts is not None else {}
 
     def reset(self):
         """Reset the board to initial game state with all pieces in starting positions."""
@@ -23,6 +24,7 @@ class Board:
 
         self.pieces = pieces
         self.current_turn = "W"  # Reset to white's turn
+        self.visit_counts = {}  # Clear visit history
     
     def get_color_up(self):
         return self.color_up
@@ -38,6 +40,12 @@ class Board:
 
     def get_piece_by_index(self, index):
         return self.pieces[index]
+
+    def get_visit_counts(self):
+        return self.visit_counts
+
+    def set_visit_counts(self, visit_counts):
+        self.visit_counts = visit_counts
 
     def has_piece(self, position):
         # Receives position (e.g.: 28), returns True if there's a piece in that position
@@ -169,6 +177,11 @@ class Board:
         else:
             # Normal move (no capture) - switch turns
             self.current_turn = "B" if self.current_turn == "W" else "W"
+
+        # Update visit counts for the new position
+        from checkers.core.state_utils import create_position_hash
+        position_hash = create_position_hash(self)
+        self.visit_counts[position_hash] = self.visit_counts.get(position_hash, 0) + 1
     
     def get_winner(self):
         # Returns the winning color or None if no player has won yet

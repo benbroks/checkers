@@ -5,7 +5,7 @@ CLI checkers game that displays MCTS Q-values for each available action.
 
 from checkers.core.board import Board
 from checkers.core.piece import Piece
-from checkers.api.environment import hash_state, reset as api_reset, legal_moves as api_legal_moves
+from checkers.api.environment import hash_state, reset as api_reset, legal_moves as api_legal_moves, _board_to_state, _state_to_board, reset
 from checkers.ai.uct_mcts import load_mcts_data
 from checkers.cli.interface import (
     position_to_coords,
@@ -15,21 +15,6 @@ from checkers.cli.interface import (
     display_board
 )
 import sys
-
-def board_to_state(board):
-    """Convert Board object to state dict for MCTS."""
-    return {
-        "pieces": [
-            {
-                "name": piece.get_name(),
-                "has_eaten": piece.get_has_eaten()
-            }
-            for piece in board.get_pieces()
-        ],
-        "current_turn": board.get_current_turn(),
-        "color_up": board.get_color_up()
-    }
-
 
 def get_mcts_stats(state, N_s, N_s_a, R_s_a):
     """Get MCTS statistics for all legal moves in the current state."""
@@ -105,8 +90,8 @@ def main():
     N_s, N_s_a, R_s_a = load_mcts_data("mcts_data.json")
 
     # Initialize board
-    pieces = create_initial_pieces()
-    board = Board(pieces, "W")
+    init_state = reset()
+    board = _state_to_board(init_state)
 
     current_turn = "W"
 
@@ -119,8 +104,9 @@ def main():
         display_board(board)
 
         # Get current state and MCTS stats
-        state = board_to_state(board)
+        state = _board_to_state(board)
         print(state)
+        print(hash_state(state))
         stats = get_mcts_stats(state, N_s, N_s_a, R_s_a)
 
         # Display MCTS statistics

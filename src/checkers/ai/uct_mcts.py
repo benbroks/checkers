@@ -4,6 +4,7 @@ import random
 import math
 import json
 import os
+import pdb
 
 # exploration constant
 EXPLORATION_CONSTANT = 1.4
@@ -199,7 +200,7 @@ def mcts_exploit(
     R_s_a
 ) -> Any | None:
     possible_moves = legal_moves(state)
-    best_action, best_score = None, -1
+    best_action, best_score = None, float(-1)
     for m in possible_moves:
         candidate_score = action_score(
             state,
@@ -210,6 +211,7 @@ def mcts_exploit(
         )
         if candidate_score > best_score:
             best_action = m
+            best_score = candidate_score
     return best_action
 
 def mcts_most_traveled(
@@ -226,6 +228,7 @@ def mcts_most_traveled(
         )
         if candidate_score > best_score:
             best_action = m
+            best_score = candidate_score
     return best_action
 
 
@@ -307,7 +310,6 @@ def double_mcts_simulation(
             )
             path = path + random_path
             finished_sim = True
-
     return update_mcts_maps(N_s, N_s_a, R_s_a, path, reward, winner)
 
 
@@ -326,6 +328,7 @@ def one_way_mcts_simulation(
     finished_sim = False
 
     while not finished_sim:
+        
         current_player = state['current_turn']
         if current_player == mcts_player:
             hashed_state = hash_state(state)
@@ -380,7 +383,7 @@ def main():
     random.seed(time.time() % 10000)
     INJECT_RANDOMNESS = False
     N_s, N_s_a, R_s_a = load_mcts_data("mcts_data.json")
-    num_sims = 500
+    num_sims = 2500
     for i in range(num_sims):
         # RANDOM
         if INJECT_RANDOMNESS:
@@ -419,7 +422,6 @@ def main():
         "mcts_data.json"
     )
     print("\n✓ Training complete!")
-
 
 
 if __name__ == "__main__":
