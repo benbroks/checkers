@@ -156,24 +156,30 @@ class Board:
             piece_to_move.set_has_eaten(False)
 
         # Turn piece into a king if it reaches the other side of the board
+        piece_was_kinged = False
         if is_king_movement(piece_to_move):
             piece_to_move.set_is_king(True)
+            piece_was_kinged = True
 
         # Actually move
         piece_to_move.set_position(new_position)
 
         # Handle turn switching - check for multi-jump scenario
         if piece_to_move.get_has_eaten():
-            # Check if this piece can make another jump
-            next_moves = piece_to_move.get_moves(self)
-            has_more_jumps = any(move["eats_piece"] for move in next_moves)
-
-            if has_more_jumps:
-                # Multi-jump available - keep same player's turn
-                pass
-            else:
-                # No more jumps - switch turns
+            # If piece was just kinged, turn ends immediately
+            if piece_was_kinged:
                 self.current_turn = "B" if self.current_turn == "W" else "W"
+            else:
+                # Check if this piece can make another jump
+                next_moves = piece_to_move.get_moves(self)
+                has_more_jumps = any(move["eats_piece"] for move in next_moves)
+
+                if has_more_jumps:
+                    # Multi-jump available - keep same player's turn
+                    pass
+                else:
+                    # No more jumps - switch turns
+                    self.current_turn = "B" if self.current_turn == "W" else "W"
         else:
             # Normal move (no capture) - switch turns
             self.current_turn = "B" if self.current_turn == "W" else "W"
