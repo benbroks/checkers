@@ -138,6 +138,7 @@ def action_score(
     )
     return q_val + EXPLORATION_CONSTANT * exploration_factor
 
+
 def num_visits(
     state,
     action,
@@ -149,7 +150,6 @@ def num_visits(
         return N_s_a[tuple_key]
     else:
         return 0
-
 
 
 def update_mcts_maps(
@@ -184,12 +184,7 @@ def update_mcts_maps(
         # Note that a tie & loss are considered to have 0 reward here
         if reward != 0 and current_player == winner:
             R_s_a[(hashed_sample_state, str(sample_action))] += 1
-        
-        # if R_s_a[(hashed_sample_state, str(sample_action))] == 1:
-        #     print(hashed_sample_state, str(sample_action))
-        #     print(f"N_s: {N_s[hashed_sample_state]}")
-        #     print(f"N_s_a: {N_s_a[(hashed_sample_state, str(sample_action))]}")
-        #     print(f"R_s_a: {R_s_a[(hashed_sample_state, str(sample_action))]}")
+
     return N_s, N_s_a, R_s_a
 
 
@@ -213,6 +208,7 @@ def mcts_exploit(
             best_action = m
             best_score = candidate_score
     return best_action
+
 
 def mcts_most_traveled(
     state,
