@@ -54,7 +54,7 @@ class CheckersDataset(Dataset):
         - Multi-jump moves are already split by parse_pdn_games()
         """
         games_loaded = 0
-        max_games = 500  # Cutoff at 500 games
+        max_games = 1500  # Cutoff at 500 games
 
         # Count total games = sum for all PDN files, for tqdm
         if isinstance(pdn_file_paths, str):
