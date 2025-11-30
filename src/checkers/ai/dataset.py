@@ -37,21 +37,6 @@ class CheckersDataset(Dataset):
     def _load_data(self, pdn_file_paths, max_games):
         """
         Load PDN games and extract (state, action) pairs.
-
-        TODO (USER IMPLEMENTS):
-        1. Use parse_pdn_games() from pdn_utils to load games
-        2. Replay each game using environment.step()
-        3. For each move:
-           - Get state before move using environment state
-           - Convert to CNN input: state_to_cnn_input(state)
-           - Convert action to target: action_to_cnn_output(action)
-           - Store (state_tensor, action_tensor) pair
-
-        IMPORTANT:
-        - PDN uses positions 1-32, internal uses 0-31
-        - Use idx_conversion() from pdn_utils.py
-        - Use parse_move() to convert move strings to tuples
-        - Multi-jump moves are already split by parse_pdn_games()
         """
         games_loaded = 0
         max_games = 1500  # Cutoff at 500 games

@@ -8,6 +8,7 @@ which is filtered to only consider legal moves.
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 from checkers.core.state_utils import state_to_cnn_input, action_to_cnn_output
 from checkers.api.environment import legal_moves, step
 
@@ -121,6 +122,76 @@ def select_cnn_move(model, state, device='cpu'):
             best_action = action
 
     return best_action
+
+
+def select_cnn_move_softmax(model, state, device='cpu', temperature=1.0):
+    """
+    Sample a move from the softmax distribution over legal moves.
+
+    The function:
+    1. Converts the state to CNN input format
+    2. Runs forward pass through the model
+    3. Filters the output to only consider legal moves
+    4. Computes softmax over legal move logits
+    5. Samples from the distribution
+
+    Args:
+        model: Trained CheckersCNN model
+        state: Current game state dict
+        device: torch device ('cpu', 'mps', 'cuda')
+        temperature: Temperature for softmax (default 1.0)
+                    Lower values make sampling more greedy
+
+    Returns:
+        (source_idx, dest_idx): The sampled action tuple
+
+    Raises:
+        ValueError: If no legal moves are available
+    """
+    probs, legal_actions = cnn_move_softmax(model, state, device, temperature)
+
+    # Sample from the distribution
+    sampled_idx = torch.multinomial(probs, num_samples=1).item()
+
+    return legal_actions[sampled_idx]
+
+
+def cnn_move_softmax(model, state, device='cpu', temperature=1.0) -> tuple[torch.Tensor, list[tuple[int, int]]]:
+    # Get legal moves
+    legal_actions = legal_moves(state)
+
+    if not legal_actions:
+        raise ValueError("No legal moves available")
+
+    # Convert state to CNN input
+    cnn_input = state_to_cnn_input(state)
+    tensor_input = torch.from_numpy(cnn_input).unsqueeze(0).float().to(device)
+
+    # Get model prediction
+    model.eval()
+    with torch.no_grad():
+        output = model(tensor_input)  # (1, 32, 8)
+
+    output = output.squeeze(0)  # (32, 8)
+
+    # Collect logits for all legal actions
+    logits = []
+    for action in legal_actions:
+        # Convert action to CNN tensor position
+        action_tensor = action_to_cnn_output(action)
+        # Find the (row, col) where action_tensor == 1
+        row, col = np.where(action_tensor == 1)
+        # Get the logit from the model output
+        logit = output[int(row[0]), int(col[0])].item()
+        logits.append(logit)
+
+    # Convert to tensor and apply temperature
+    logits_tensor = torch.tensor(logits, dtype=torch.float32) / temperature
+
+    # Compute softmax probabilities
+    probs = F.softmax(logits_tensor, dim=0)
+    return probs, legal_actions
+
 
 
 def single_turn_cnn_player(model, state, device='cpu'):
