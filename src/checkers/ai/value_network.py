@@ -35,6 +35,39 @@ class ValueNetworkCNN(nn.Module):
         # Dropout for regularization
         self.dropout = nn.Dropout(0.3)
 
+        # Initialize weights properly to avoid saturation
+        self._initialize_weights()
+
+    def _initialize_weights(self):
+        """
+        Initialize network weights using proper initialization schemes.
+
+        - Conv layers: Kaiming (He) initialization for ReLU activations
+        - FC layers: Xavier initialization with smaller scale for output layer
+        - Biases: Initialize to small values
+        """
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                # Kaiming initialization for conv layers (good for ReLU)
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                # Xavier initialization for linear layers
+                nn.init.xavier_uniform_(m.weight, gain=1.0)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                # Standard initialization for batch norm
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+
+        # Special initialization for output layer to prevent saturation
+        # Use moderate weights so initial outputs are distributed but not saturated
+        # gain=0.5 gives us good variance while keeping outputs reasonable
+        nn.init.xavier_uniform_(self.fc3.weight, gain=0.5)
+        nn.init.constant_(self.fc3.bias, 0)
+
     def forward(self, x):
         """
         Forward pass through the network.
@@ -75,7 +108,8 @@ class ValueNetworkCNN(nn.Module):
 
         # FC block 3 (output layer)
         x = self.fc3(x)
-        x = torch.tanh(x)  # Squash output to [-1, 1]
+        x = torch.sigmoid(x)  # Output to [0, 1]
+        x = 2 * x - 1  # Scale to [-1, 1]
 
         return x
 

@@ -149,23 +149,34 @@ class CheckersValueNetworkDataset(Dataset):
                     outcome = reward if state['current_turn'] == 'W' else -reward
 
             # Sample random states from the game
+            # Sample up to 3 positions per side to get more training data
+            num_samples_per_side = 3
+
             if len(game_states) >= 2:
                 # Separate states by player
                 white_states = [s for s, player in game_states if player == 'W']
                 black_states = [s for s, player in game_states if player == 'B']
 
-                # Sample one from each if available
+                # Sample multiple positions from each side if available
                 if white_states:
-                    white_state = random.choice(white_states)
-                    white_value = outcome  # +1 if White won, -1 if Black won, 0 if draw
-                    state_tensor = state_to_cnn_input(white_state)
-                    self.samples.append((state_tensor, float(white_value)))
+                    # Sample up to num_samples_per_side positions
+                    num_to_sample = min(num_samples_per_side, len(white_states))
+                    sampled_white_states = random.sample(white_states, num_to_sample)
+
+                    for white_state in sampled_white_states:
+                        white_value = outcome  # +1 if White won, -1 if Black won, 0 if draw
+                        state_tensor = state_to_cnn_input(white_state)
+                        self.samples.append((state_tensor, float(white_value)))
 
                 if black_states:
-                    black_state = random.choice(black_states)
-                    black_value = -outcome  # Flip outcome for Black's perspective
-                    state_tensor = state_to_cnn_input(black_state)
-                    self.samples.append((state_tensor, float(black_value)))
+                    # Sample up to num_samples_per_side positions
+                    num_to_sample = min(num_samples_per_side, len(black_states))
+                    sampled_black_states = random.sample(black_states, num_to_sample)
+
+                    for black_state in sampled_black_states:
+                        black_value = -outcome  # Flip outcome for Black's perspective
+                        state_tensor = state_to_cnn_input(black_state)
+                        self.samples.append((state_tensor, float(black_value)))
 
     def __len__(self):
         return len(self.samples)
