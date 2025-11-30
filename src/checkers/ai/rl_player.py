@@ -26,23 +26,6 @@ def select_cnn_move_softmax(
     """
     Select a move by sampling from softmax over legal moves.
 
-    [PLACEHOLDER - USER IMPLEMENTS THIS]
-
-    This function should:
-    1. Get legal moves from the environment
-    2. Convert state to CNN input and run forward pass
-    3. Extract logits for each legal move from the output tensor
-    4. Apply temperature scaling: logits / temperature
-    5. Compute softmax over legal move logits
-    6. Sample an action from the probability distribution
-    7. Return (action, log_prob) tuple
-
-    Implementation hints:
-    - Use torch.multinomial() to sample from probabilities
-    - Use F.log_softmax() to get log probabilities
-    - Extract the log_prob of the sampled action (needed for REINFORCE)
-    - Remember to handle temperature=0 case (should be argmax)
-
     Args:
         model: CheckersCNN model
         state: Game state dict
