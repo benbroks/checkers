@@ -96,4 +96,38 @@ for _ in range(100):
 
 This integrated approach enables the system to learn from self-play and improve over time without human game data.
 
+## Training Pipeline
+
+**1. Train Policy Network (Supervised Learning)**
+```bash
+uv run python test/train_supervised.py
+```
+Trains on expert PDN games. Output: `checkpoints/best_model.pth`
+
+**2. Generate Value Network Dataset**
+```bash
+uv run python test/generate_value_dataset.py
+```
+Generates 10k self-play games (~30-40 min). Output: `data/value_network_dataset.pkl`
+
+**3. Train Value Network**
+```bash
+uv run python test/train_value_network.py
+```
+Trains position evaluator. Output: `checkpoints/value_network/best_model.pth`
+
+**4. Reinforcement Learning (Optional)**
+```bash
+uv run python test/train_reinforcement_learning.py
+```
+Improves policy via self-play. Output: `checkpoints/rl/iter_*.pth`
+
+## Playing the AI
+
+**Play against Network MCTS:**
+```bash
+uv run python test/play_cli_with_network_mcts.py
+```
+Interactive CLI game. Human plays White, AI plays Black. Enter moves as `a3 b4`.
+
 Inspired / branched off of @lucaskenji's [repo](https://github.com/lucaskenji/python-checkers).
