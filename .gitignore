@@ -4,3 +4,4 @@
 checkpoints/*
 *.pdn
 runs/*
+data/*

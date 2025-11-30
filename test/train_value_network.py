@@ -28,10 +28,10 @@ def main():
         val_split=0.2,
 
         # Training hyperparameters
-        batch_size=128,      # Increased from 64 - better gradient estimates at higher LR
+        batch_size=128,
         num_epochs=100,
-        learning_rate=5e-3,  # Increased from 1e-3 - model was learning too slowly
-        weight_decay=1e-5,   # Reduced from 1e-4 - less regularization for better learning
+        learning_rate=1e-4,  # Conservative LR for sigmoid activation to prevent saturation
+        weight_decay=1e-4,
 
         # Optimization
         max_grad_norm=1.0,
