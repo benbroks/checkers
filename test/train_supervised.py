@@ -22,7 +22,7 @@ def main():
     # Create training configuration
     config = TrainingConfig(
         # Data files (update with your PDN files)
-        pdn_files=['full.pdn'],  # TODO: Update with actual PDN file paths
+        pdn_files=['full.pdn'], 
         max_games=None,  # None = load all games, or set a number for testing
 
         # Training hyperparameters (CPU-optimized)

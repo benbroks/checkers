@@ -32,14 +32,9 @@ Production code should be organized under `src/checkers/`:
 
 ## Running Tests
 
-All test scripts should be runnable with:
+All test scripts should be runnable with uv:
 ```bash
-PYTHONPATH=./src python3 test/<test_file>.py
-```
-
-Or with venv:
-```bash
-PYTHONPATH=./src ./venv/bin/python3 test/<test_file>.py
+uv run python test/<test_file>.py
 ```
 
 ## Code Style
@@ -70,12 +65,19 @@ Use `state_to_cnn_input(state)` from `checkers.core.state_utils` to convert boar
 
 ## Dependencies
 
+This project uses [uv](https://docs.astral.sh/uv/) for dependency management.
+
 Core dependencies:
 - `pygame` - GUI support
 - `numpy` - Numerical operations
 - `torch` - Neural network support (for AI components)
 
-Install with:
+Install dependencies:
 ```bash
-./venv/bin/pip install pygame numpy torch
+uv sync
+```
+
+Add new dependencies:
+```bash
+uv add package-name
 ```

@@ -5,3 +5,6 @@ checkpoints/*
 *.pdn
 runs/*
 data/*
+.venv/
+venv/
+uv.lock
