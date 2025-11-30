@@ -41,7 +41,11 @@ def train_epoch(model, train_loader, optimizer, device, config):
         optimizer.zero_grad()
 
         # Forward pass
-        predictions = model(states)  # (batch, 1) in [-1, 1] via tanh
+        predictions = model(states)  # (batch, 1) in [-1, 1]
+        # INSERT_YOUR_CODE
+        # Print first 20 items of predictions and values for inspection
+        # print("Predictions (first 20):", predictions[:20].flatten().cpu().detach().numpy())
+        # print("Targets     (first 20):", values[:20].flatten().cpu().detach().numpy())
 
         # MSE Loss
         loss = F.mse_loss(predictions, values)
